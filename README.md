@@ -1,6 +1,8 @@
 # Titanium Logger
-
 This is a remote logging server and client code for Titanium applications.  The idea is inspired from <http://cloudebug.com>.  I needed a better tool so I built Titanium Logger.
+
+Essentially from within your iPhone app (running within the Simulator or the actual device), you can see the log messages in real-time via the Web Console.  And you can also push code directly to any connected devices to help debugging your app.
+
 <img src="https://github.com/sr3d/titanium_logger/raw/master/src/images/webconsole.png" alt="Titanium Logger Webconsole" />
 
 
@@ -54,8 +56,9 @@ This is a remote logging server and client code for Titanium applications.  The 
 - profit!
 
 
-# Limitation
+# Known-issues and limitations
 - Your device must be on the same network, otherwise it won't be able to communicate with the logging server.  If you need any devices to see the server, deploy the server script to your own server and point your logger's host to that server accordingly.
+- Run the logging server before launching the app to make sure the logger can connect properly.  If you kill the server, the logger may not re-connect.
 
 
 # About
