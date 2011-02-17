@@ -1,0 +1,71 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'em-websocket'
+require 'haml'
+require 'sinatra'
+require 'thin'
+require 'socket'
+
+HOST = '0.0.0.0'          # runnin on localhost
+LOGSERVER_PORT = 8484
+WEBSOCKET_PORT = 8485
+WEBSERVER_PORT = 8486
+
+$clients = []
+$devices = []
+
+
+module LogServer
+  def post_init
+    $devices << self
+    puts "New Device Connected"
+  end
+
+  def receive_data data
+    $clients.each { |client| client.send data }
+  end
+  
+  def unbind
+    $devices.delete self
+    puts "Device Close"
+  end
+end
+
+
+EventMachine.run do
+  class App < Sinatra::Base
+    # set :public, File.dirname(__FILE__) + '/public'
+    # enable :inline_templates
+    get '/' do
+      erb :index
+    end
+  end
+
+ 
+  EventMachine::WebSocket.start(:host => HOST, :port => WEBSOCKET_PORT) do |ws|
+    ws.onopen {
+      $clients << ws
+      ws.send "Browser Connected. #{$devices.length} device#{$devices.length == 1 ? '' : 's'} connected"
+    }
+
+    ws.onmessage { |msg| 
+      puts "receive " + msg
+      $devices.each{ |device| device.send_data msg }
+    }
+
+    ws.onclose   {
+      ws.send "Browser Disconnected"
+      $clients.delete ws
+    }
+  end
+
+  EventMachine::start_server HOST, LOGSERVER_PORT, LogServer
+
+  App.run!({:port => WEBSERVER_PORT})
+  
+  
+  puts "=================="
+  puts "Web Console locates at:     #{HOST}:#{WEBSERVER_PORT}"
+  puts "Logging Server locates at:  #{HOST}:#{LOGSERVER_PORT}"
+  puts "=================="
+end

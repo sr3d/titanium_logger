@@ -1,0 +1,168 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'em-websocket'
+require 'haml'
+require 'sinatra'
+require 'thin'
+require 'socket'
+
+HOST = '0.0.0.0'          # runnin on localhost
+LOGSERVER_PORT = 8484
+WEBSOCKET_PORT = 8485
+WEBSERVER_PORT = 8486
+
+$clients = []
+$devices = []
+
+
+module LogServer
+  def post_init
+    $devices << self
+    puts "New Device Connected"
+  end
+
+  def receive_data data
+    $clients.each { |client| client.send data }
+  end
+  
+  def unbind
+    $devices.delete self
+    puts "Device Close"
+  end
+end
+
+
+EventMachine.run do
+  class App < Sinatra::Base
+    # set :public, File.dirname(__FILE__) + '/public'
+    enable :inline_templates
+    get '/' do
+      erb :index
+    end
+  end
+
+ 
+  EventMachine::WebSocket.start(:host => HOST, :port => WEBSOCKET_PORT) do |ws|
+    ws.onopen {
+      $clients << ws
+      ws.send "Browser Connected. #{$devices.length} device#{$devices.length == 1 ? '' : 's'} connected"
+    }
+
+    ws.onmessage { |msg| 
+      puts "receive " + msg
+      $devices.each{ |device| device.send_data msg }
+    }
+
+    ws.onclose   {
+      ws.send "Browser Disconnected"
+      $clients.delete ws
+    }
+  end
+
+  EventMachine::start_server HOST, LOGSERVER_PORT, LogServer
+
+  App.run!({:port => WEBSERVER_PORT})
+  
+  
+  puts "=================="
+  puts "Web Console locates at:     #{HOST}:#{WEBSERVER_PORT}"
+  puts "Logging Server locates at:  #{HOST}:#{LOGSERVER_PORT}"
+  puts "=================="
+end
+
+__END__
+
+<html>
+<head>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/prototype/1.7.0.0/prototype.js"></script>
+<script type="text/javascript">
+$(document).on('dom:loaded', function() {
+  var socket = new WebSocket('ws://<%= HOST %>:<%= WEBSOCKET_PORT %>');
+  var log = $('log');
+  socket.onmessage = function(msg) {
+    log.value += msg.data + "\n";
+    $('last_message_status').innerHTML = 'Last message received at ' + (new Date());
+    log.scrollTop = log.scrollHeight;
+  };
+  
+  var input = $('code');
+  var submitCode = function() {
+    socket.send(input.value);
+  };
+  
+  $('submit').on('click', submitCode);
+  
+  var controlPressed = false;
+  $('code').on('keyup', function(e){
+    if(e.which == 17) controlPressed = false;
+  });
+  $('code').on('keydown', function(e) {
+    controlPressed = e.ctrlKey || e.metaKey || e.which == 17 || e.which == 157 || e.which == 91;
+    var enterPressed = e.which == 13;
+    if(controlPressed && enterPressed) {
+      submitCode();
+      $('code_sent_status').innerHTML = 'Sent at ' + (new Date());
+      return false;
+    };
+
+  });
+  
+});
+
+  
+</script>
+<style type="text/css">
+body {padding: 0; margin: 0; }
+body, div { font-family: Arial; font-size: 13px; }
+#wrapper { width: 100%; }
+#header { padding: 10px 10px; margin-bottom: 5px; border-bottom: 1px solid #ebf1f6;
+  background: #cfe7fa; /* old browsers */
+  background: -moz-linear-gradient(top, #cfe7fa 0%, #6393c1 100%); /* firefox */
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#cfe7fa), color-stop(100%,#6393c1)); /* webkit */
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#cfe7fa', endColorstr='#6393c1',GradientType=0 ); /* ie */
+};
+  #title { font-size: 16px; font-weight: bold;  }
+  #server_info { float: right; }
+#log_wrapper { float: left; width: 60%; margin-left: 10px; }
+  #log { width: 100%; height: 600px; font-family: Courier }
+#code_wrapper { float: left; width: 38%; margin-left: 10px;}
+  #code { width: 100%; height: 600px; font-family: Courier }
+#footer { padding: 10px; color: #AAAAAA;}
+</style>
+</head>
+<body>
+
+  <div id="header">
+    <span id="title">Titanium Remote Logging</span>
+    <div id="server_info">
+      Logging Server running on <%= HOST %>, port <%= LOGSERVER_PORT %>
+    </div><!-- #server_info -->
+    <div style="clear:both"></div>
+  </div><!-- #header -->
+
+  <div id="wrapper">
+    <div id="log_wrapper">
+      <b>Log Messages</b>
+      <textarea id='log'></textarea>
+      <br/>
+      <a href="javascript:void(0)" onclick='$("log").value = ""'>Clear</a><br/>
+      <span id="last_message_status"></span>
+    </div>
+
+    <div id="code_wrapper">
+      <b>Execute Code On Clients (Shortcut: Cmd or Ctrl + Enter)</b>
+      <br/>
+      <textarea id='code'></textarea>
+      <br/>
+      <input type="button" id='submit' value="Submit"/> or <a href="javascript:void(0)" onclick='$("code").value = ""'>Clear</a>
+      <br/>
+      <span id="code_sent_status"><span>
+    </div>
+    <div style="clear:both"></div>
+  </div><!-- #wrapper -->
+  <div id="footer">
+    (C) 2011 Alex Le (<a href="https://github.com/sr3d">Github</a>| <a href="http://alexle.net">Blog</a>) from <a href="http://marrily.com">Marrily</a>
+  </div>    
+
+</body>
+</html>
