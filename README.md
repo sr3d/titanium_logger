@@ -21,6 +21,9 @@ This is a remote logging server and client code for Titanium applications.  The 
         gem install thin                    # or with sudo gem install thin
     
 - chmod the server file to +x and run it, or run with ruby
+
+        ./server  # or ruby server
+
 - if everything goes correctly, you should see something like this ...
 
         == Sinatra/1.0 has taken the stage on 8486 for development with backup from Thin
@@ -33,21 +36,21 @@ This is a remote logging server and client code for Titanium applications.  The 
         ==================
 
 ## Client javascript
-- download the client script and put it in your Titanium's Resources folder:  [client script](https://github.com/sr3d/titanium_logger/raw/master/dist/logger.js) 
+- download the client script and put it in your Titanium's Resources folder:  [logger.js](https://github.com/sr3d/titanium_logger/raw/master/dist/logger.js) 
 - at the top of your app.js, put 
 
-    var logger = require('path/to/logger').logger('localhost', 8484);
+        var logger = require('path/to/logger').logger('localhost', 8484);
     
-- remember, you don't need to put the .js extension.
+- Since the logger.js is written as a CommonJS module, you don't need to put the .js extension.
 - anywhere you want to log remotely, just use 
 
-    logger.log("this is a test message");
+        logger.log("this is a test message");
     
 - Object passed to the log() method will be serialized to a string with JSON.stringify()
 
 
 ## Webconsole
-- Once the server is up running, point your web browser to http://localhost:8486.  
+- Once the server is up running, point your web browser to <http://localhost:8486>.  
 - profit!
 
 
