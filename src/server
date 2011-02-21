@@ -34,7 +34,7 @@ end
 
 EventMachine.run do
   class App < Sinatra::Base
-    # set :public, File.dirname(__FILE__) + '/public'
+    set :public, File.dirname(__FILE__) + '/public'
     # enable :inline_templates
     get '/' do
       erb :index

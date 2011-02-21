@@ -7,11 +7,25 @@ task :default do
     File.open(f, "r") { |file| merged_file.push file.read }
   end
   
-  merged_file = merged_file.join("\n\n__END__\n\n")
+  separator = <<-SEPARATOR
+
+__END__
+
+@@ layout
+<%= yield %>
+
+@@ index
+  
+SEPARATOR
+  
+  merged_file = merged_file.join(separator)
+
   merged_file.gsub! /#\s*enable\s*:inline_templates/, 'enable :inline_templates'
+  merged_file.gsub! /set\s*:public/, '#set :public'
 
   File.open('dist/server', "w") {|f| f.write(merged_file) }
   FileUtils.copy('src/logger.js', 'dist/')
+  `chmod +x dist/server`
 
   puts "Done Building"
 end

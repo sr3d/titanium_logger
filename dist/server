@@ -34,7 +34,7 @@ end
 
 EventMachine.run do
   class App < Sinatra::Base
-    # set :public, File.dirname(__FILE__) + '/public'
+    #set :public, File.dirname(__FILE__) + '/public'
     enable :inline_templates
     get '/' do
       erb :index
@@ -63,7 +63,6 @@ EventMachine.run do
 
   App.run!({:port => WEBSERVER_PORT})
   
-  
   puts "=================="
   puts "Web Console locates at:     #{HOST}:#{WEBSERVER_PORT}"
   puts "Logging Server locates at:  #{HOST}:#{LOGSERVER_PORT}"
@@ -72,6 +71,11 @@ end
 
 __END__
 
+@@ layout
+<%= yield %>
+
+@@ index
+  
 <html>
 <head>
 <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/prototype/1.7.0.0/prototype.js"></script>
@@ -108,8 +112,6 @@ $(document).on('dom:loaded', function() {
   });
   
 });
-
-  
 </script>
 <style type="text/css">
 body {padding: 0; margin: 0; }
@@ -131,7 +133,6 @@ body, div { font-family: Arial; font-size: 13px; }
 </style>
 </head>
 <body>
-
   <div id="header">
     <span id="title">Titanium Remote Logging</span>
     <div id="server_info">
