@@ -36,28 +36,35 @@ Logger.prototype.connect = function() {
 
 Logger.prototype.ensureConnection = function() {
   if(this.socket.isValid) {return; };
-
   this.connected = false;
-  
-  this.socket.connect();
   var self = this;
+  var attempts = 0;
   var checkSocketConnected = setInterval( function() {
     self.connected = self.socket && self.socket.isValid;
+    attempts++;
+    if(attempts > 3) { 
+      clearInterval(checkSocketConnected);
+      Ti.API.debug('Giving up trying to connect to Logging server');
+    };
     if(self.connected) {
       clearInterval(checkSocketConnected);
-      self.log('===========================================')
+      self.log('===========================================');
       self.log('Device ' + Titanium.Platform.macaddress + ' connected (' + String.formatDate( new Date(), 'medium') + ')');
       for(var i = 0, len = self._msgs.length; i < len; i++ ) {
         self.log(self._msgs[i]);
       };
+      self._msgs = [];
+    } else {
+      self.socket.connect(); // attempt to connect
     };
-  }, 20);
+  }, 1000);
 };
 /*
  Log a message to the remote logging server
  If the socket is not ready, queue up the messages to an array that will be sent when there's a good connection
 */
 Logger.prototype.log = function(msg) {
+  if(msg === null) { msg = ''; }
   try {
     this.ensureConnection();
     if(this.connected) {

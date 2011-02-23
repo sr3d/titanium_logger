@@ -63,12 +63,12 @@ EventMachine.run do
 
   App.run!({:port => WEBSERVER_PORT})
   
+  
   puts "=================="
   puts "Web Console locates at:     #{HOST}:#{WEBSERVER_PORT}"
   puts "Logging Server locates at:  #{HOST}:#{LOGSERVER_PORT}"
   puts "=================="
 end
-
 __END__
 
 @@ layout
