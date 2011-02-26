@@ -45,6 +45,7 @@ Logger.prototype.ensureConnection = function() {
     if(attempts > 3) { 
       clearInterval(checkSocketConnected);
       Ti.API.debug('Giving up trying to connect to Logging server');
+      return;
     };
     if(self.connected) {
       clearInterval(checkSocketConnected);
