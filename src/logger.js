@@ -22,14 +22,14 @@ Logger.prototype.connect = function() {
     };
   });
   this.socket.addEventListener('readError', function(){
-    Ti.API.debug('readError');
+    Ti.API.debug('Error Reading from Logging Server');
     self.connected = false;
-    self.ensureConnection();
+    // self.ensureConnection();
   });
   this.socket.addEventListener('writeError', function() {
-    Ti.API.debug('writeError');
+    Ti.API.debug('Error Writing to Logging Server');
     self.connected = false;
-    self.ensureConnection();
+    // self.ensureConnection();
   });
   this.ensureConnection();
 };
@@ -45,7 +45,6 @@ Logger.prototype.ensureConnection = function() {
     if(attempts > 3) { 
       clearInterval(checkSocketConnected);
       Ti.API.debug('Giving up trying to connect to Logging server');
-      return;
     };
     if(self.connected) {
       clearInterval(checkSocketConnected);
@@ -58,14 +57,14 @@ Logger.prototype.ensureConnection = function() {
     } else {
       self.socket.connect(); // attempt to connect
     };
-  }, 1000);
+  }, 10000);
 };
 /*
  Log a message to the remote logging server
  If the socket is not ready, queue up the messages to an array that will be sent when there's a good connection
 */
 Logger.prototype.log = function(msg) {
-  if(msg === null) { msg = ''; }
+  if(msg === null) { msg = ''; }; // make sure it doesn't bomb out on null objects
   try {
     this.ensureConnection();
     if(this.connected) {
