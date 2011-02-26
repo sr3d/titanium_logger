@@ -66,7 +66,7 @@ Logger.prototype.ensureConnection = function() {
 Logger.prototype.log = function(msg) {
   if(msg === null) { msg = ''; }; // make sure it doesn't bomb out on null objects
   try {
-    this.ensureConnection();
+    // this.ensureConnection();
     if(this.connected) {
       this.socket.write(JSON.stringify(msg));
     } else {
