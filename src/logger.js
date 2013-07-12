@@ -1,4 +1,9 @@
 /* Logger class to take care of the logging and conneting to the server.*/
+/* jshint eqnull:true */
+function debug(message, method) {
+  Ti.API.debug("[Logger" + (method != null ? "." + method : "") + "] " + message);
+}
+
 var Logger = function(host,port) {
   this.host = host;
   this.port = port;
@@ -18,16 +23,17 @@ Logger.prototype.connect = function() {
     try {
       eval('(function(){' + msg.data + '})()' );
     } catch(ex) {
-      Ti.API.debug(ex);
+      self.log(ex);
+      debug(ex, "connect");
     }
   });
   this.socket.addEventListener('readError', function(){
-    Ti.API.debug('Error Reading from Logging Server');
+    debug('Error Reading from Logging Server', "connect");
     self.connected = false;
     // self.ensureConnection();
   });
   this.socket.addEventListener('writeError', function() {
-    Ti.API.debug('Error Writing to Logging Server');
+    debug('Error Writing to Logging Server', "connect");
     self.connected = false;
     // self.ensureConnection();
   });
@@ -44,7 +50,7 @@ Logger.prototype.ensureConnection = function() {
     attempts++;
     if(attempts > 3) { 
       clearInterval(checkSocketConnected);
-      Ti.API.debug('Giving up trying to connect to Logging server');
+      debug('Giving up trying to connect to Logging server', "ensureConnection");
     }
     if(self.connected) {
       clearInterval(checkSocketConnected);
@@ -64,7 +70,7 @@ Logger.prototype.ensureConnection = function() {
  If the socket is not ready, queue up the messages to an array that will be sent when there's a good connection
 */
 Logger.prototype.log = function(msg) {
-  if (msg === null) { msg = ''; } // make sure it doesn't bomb out on null objects
+  if (msg == null) { return; } // make sure it doesn't bomb out on null objects
   try {
     // this.ensureConnection();
     if(this.connected) {
@@ -73,8 +79,9 @@ Logger.prototype.log = function(msg) {
       this._msgs.push(msg); // queue up the msg
     }
   } catch (ex) {
-    Ti.API.debug(ex);
+    debug(ex, "log");
   }
+  debug(msg, "log"); // Redundent data is ok.
 };
 
 
@@ -87,7 +94,7 @@ exports.logger = function(host, post) {
     logger.connect();
   } catch (ex) {
     alert( 'Connection Error' );
-    Ti.API.debug(ex);
+    debug(ex);
   }
   return logger;
 };
