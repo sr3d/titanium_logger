@@ -19,7 +19,7 @@ Logger.prototype.connect = function() {
       eval('(function(){' + msg.data + '})()' );
     } catch(ex) {
       Ti.API.debug(ex);
-    };
+    }
   });
   this.socket.addEventListener('readError', function(){
     Ti.API.debug('Error Reading from Logging Server');
@@ -35,7 +35,7 @@ Logger.prototype.connect = function() {
 };
 
 Logger.prototype.ensureConnection = function() {
-  if(this.socket.isValid) {return; };
+  if (this.socket.isValid) { return; }
   this.connected = false;
   var self = this;
   var attempts = 0;
@@ -45,18 +45,18 @@ Logger.prototype.ensureConnection = function() {
     if(attempts > 3) { 
       clearInterval(checkSocketConnected);
       Ti.API.debug('Giving up trying to connect to Logging server');
-    };
+    }
     if(self.connected) {
       clearInterval(checkSocketConnected);
       self.log('===========================================');
       self.log('Device ' + Titanium.Platform.macaddress + ' connected (' + String.formatDate( new Date(), 'medium') + ')');
       for(var i = 0, len = self._msgs.length; i < len; i++ ) {
         self.log(self._msgs[i]);
-      };
+      }
       self._msgs = [];
     } else {
       self.socket.connect(); // attempt to connect
-    };
+    }
   }, 10000);
 };
 /*
@@ -64,17 +64,17 @@ Logger.prototype.ensureConnection = function() {
  If the socket is not ready, queue up the messages to an array that will be sent when there's a good connection
 */
 Logger.prototype.log = function(msg) {
-  if(msg === null) { msg = ''; }; // make sure it doesn't bomb out on null objects
+  if (msg === null) { msg = ''; } // make sure it doesn't bomb out on null objects
   try {
     // this.ensureConnection();
     if(this.connected) {
       this.socket.write(JSON.stringify(msg));
     } else {
       this._msgs.push(msg); // queue up the msg
-    };
+    }
   } catch (ex) {
     Ti.API.debug(ex);
-  };
+  }
 };
 
 
@@ -88,6 +88,6 @@ exports.logger = function(host, post) {
   } catch (ex) {
     alert( 'Connection Error' );
     Ti.API.debug(ex);
-  };
+  }
   return logger;
 };
